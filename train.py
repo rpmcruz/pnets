@@ -13,7 +13,7 @@ import pnets as pn
 tr = pn.datasets.Sydney('data', args.download, 'train')
 K = len(tr.classes)
 tr = pn.datasets.Normalize(tr)
-tr = DataLoader(tr, 1, True)
+tr = DataLoader(tr, 1, True, num_workers=2)
 
 model = pn.pointnet.Classifier(K).cuda()
 summary(model)
