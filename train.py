@@ -13,16 +13,19 @@ import torch.nn.functional as F
 from time import time
 import pnets as pn
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print('Using:', device)
+
 tr = pn.datasets.Sydney('data', args.download, 'train')
 K = len(tr.classes)
 tr = pn.datasets.Normalize(tr)
 tr = pn.datasets.ResamplePoints(tr, args.npoints)
 tr = DataLoader(tr, 32, True, num_workers=2)
 
-model = pn.pointnet.PointNetCls(K).cuda()
+model = pn.pointnet.PointNetCls(K).to(device)
 summary(model)
 
-sim_data = torch.rand(32, 3, 2500).cuda()
+sim_data = torch.rand(32, 3, 2500).to(device)
 out, _, _ = model(sim_data)
 print('output shape:', out.shape)
 
@@ -36,8 +39,8 @@ for epoch in range(args.epochs):
     avg_loss = 0
     avg_acc = 0
     for P, Y in tr:
-        P = P.cuda()
-        Y = Y.cuda()
+        P = P.to(device)
+        Y = Y.to(device)
         opt.zero_grad()
 
         Y_pred, trans, trans_feat = model(P)
