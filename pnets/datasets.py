@@ -31,6 +31,20 @@ class Sydney(Dataset):
         Y = self.to_class[self.files[i].split('.')[0]]
         return P, Y
 
+class ResamplePoints(Dataset):
+    def __init__(self, ds, npoints):
+        self.ds = ds
+        self.npoints = npoints
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, i):
+        P, Y = self.ds[i]
+        ix = np.random.choice(P.shape[1], self.npoints)
+        P = P[:, ix]
+        return P, Y
+
 class Normalize(Dataset):
     def __init__(self, ds):
         self.ds = ds
@@ -45,3 +59,20 @@ class Normalize(Dataset):
         P, Y = self.ds[i]
         P = (P-self.center)/self.max
         return P, Y
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('dataset')
+    parser.add_argument('i', type=int)
+    args = parser.parse_args()
+
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ds = globals()[args.dataset]('data', False, 'train')
+    P, Y = ds[args.i]
+    ax.scatter(P[0], P[1], P[2])
+    ax.set_title(ds.classes[Y])
+    plt.show()
