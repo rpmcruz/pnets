@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 class Sydney(Dataset):
-    def __init__(self, root, download, fold):
+    def __init__(self, root, download, fold, transform=None):
         assert fold in ('train', 'test'), f'fold must be train or test, not {fold}'
         if download:
             url = 'http://www.acfr.usyd.edu.au/papers/data/sydney-urban-objects-dataset.tar.gz'
@@ -17,6 +17,7 @@ class Sydney(Dataset):
                 self.files += [line.rstrip() for line in f.readlines()]
         self.classes = sorted(list(set(f.split('.')[0] for f in self.files)))
         self.to_class = {label: k for k, label in enumerate(self.classes)}
+        self.transform = transform
 
     def __len__(self):
         return len(self.files)
@@ -28,6 +29,8 @@ class Sydney(Dataset):
         binType = np.dtype({'names': names, 'formats': formats})
         data = np.fromfile(filename, binType)
         P = np.vstack([data['x'], data['y'], data['z']])
+        if self.transform:
+            P = self.transform(P)
         Y = self.to_class[self.files[i].split('.')[0]]
         return P, Y
 
