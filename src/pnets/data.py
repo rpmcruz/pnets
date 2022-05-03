@@ -15,8 +15,8 @@ class Sydney(Dataset):
         for i in folds:
             with open(os.path.join(self.root, 'folds', f'fold{i}.txt')) as f:
                 self.files += [line.rstrip() for line in f.readlines()]
-        self.classes = sorted(list(set(f.split('.')[0] for f in self.files)))
-        self.to_class = {label: k for k, label in enumerate(self.classes)}
+        self.labels = sorted(list(set(f.split('.')[0] for f in self.files)))
+        self.to_class = {label: k for k, label in enumerate(self.labels)}
         self.transform = transform
 
     def __len__(self):
@@ -28,39 +28,10 @@ class Sydney(Dataset):
         formats = ['int64', 'uint8', 'uint8', 'float32', 'float32', 'float32', 'float32', 'float32', 'int32']
         binType = np.dtype({'names': names, 'formats': formats})
         data = np.fromfile(filename, binType)
-        P = np.vstack([data['x'], data['y'], data['z']])
+        P = np.vstack([data['x'], data['y'], -data['z']])
         if self.transform:
             P = self.transform(P)
         Y = self.to_class[self.files[i].split('.')[0]]
-        return P, Y
-
-class ResamplePoints(Dataset):
-    def __init__(self, ds, npoints):
-        self.ds = ds
-        self.npoints = npoints
-
-    def __len__(self):
-        return len(self.ds)
-
-    def __getitem__(self, i):
-        P, Y = self.ds[i]
-        ix = np.random.choice(P.shape[1], self.npoints)
-        P = P[:, ix]
-        return P, Y
-
-class Normalize(Dataset):
-    def __init__(self, ds):
-        self.ds = ds
-        pts = np.concatenate([d[0] for d in self.ds], 1)
-        self.center = np.mean(pts, 1, keepdims=True)
-        self.max = np.max(np.abs(pts-self.center), 1, keepdims=True)
-
-    def __len__(self):
-        return len(self.ds)
-
-    def __getitem__(self, i):
-        P, Y = self.ds[i]
-        P = (P-self.center)/self.max
         return P, Y
 
 if __name__ == "__main__":
@@ -70,12 +41,8 @@ if __name__ == "__main__":
     parser.add_argument('i', type=int)
     args = parser.parse_args()
 
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    import plots
     ds = globals()[args.dataset]('data', False, 'train')
     P, Y = ds[args.i]
-    ax.scatter(P[0], P[1], P[2])
-    ax.set_title(ds.classes[Y])
-    plt.show()
+    print(ds.classes[Y])
+    plot.plot3d(P)

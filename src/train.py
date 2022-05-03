@@ -1,5 +1,7 @@
 import argparse
 parser = argparse.ArgumentParser()
+parser.add_argument('dataset', choices=['Sydney'])
+parser.add_argument('--datadir', default='data')
 parser.add_argument('--download', action='store_true')
 parser.add_argument('--epochs', default=50, type=int)
 parser.add_argument('--npoints', default=2500, type=int)
@@ -11,27 +13,36 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn.functional as F
 from time import time
+import numpy as np
 import pnets as pn
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print('Using:', device)
+print('Using', device)
 
-tr = pn.datasets.Sydney('data', args.download, 'train')
-K = len(tr.classes)
-tr = pn.datasets.Normalize(tr)
-tr = pn.datasets.ResamplePoints(tr, args.npoints)
+# we load the dataset once to extract values necessary for normalization
+dataset = getattr(pn.data, args.dataset)
+tr = dataset(args.datadir, args.download, 'train')
+center, max_value = pn.aug.compute_center_max(tr)
+
+# load the dataset again with augmentation
+aug = pn.aug.Compose(
+    pn.aug.Resample(args.npoints),
+    pn.aug.Normalize(center, max_value),
+    pn.aug.Jitter(),
+    pn.aug.RandomRotation('Z', 0, 2*np.pi),
+)
+tr = dataset(args.datadir, args.download, 'train', aug)
+K = len(tr.labels)
 tr = DataLoader(tr, 32, True, num_workers=2)
 
+# create the model
 model = pn.pointnet.PointNetCls(K).to(device)
 summary(model)
-
-sim_data = torch.rand(32, 3, 2500).to(device)
-out, _, _ = model(sim_data)
-print('output shape:', out.shape)
 
 opt = torch.optim.Adam(model.parameters(), 1e-3)
 ce_loss = torch.nn.CrossEntropyLoss()
 
+# train the model
 model.train()
 for epoch in range(args.epochs):
     print(f'* Epoch {epoch+1} / {args.epochs}')
@@ -51,7 +62,6 @@ for epoch in range(args.epochs):
         opt.step()
         avg_loss += float(loss) / len(tr)
         K_pred = torch.nn.functional.softmax(Y_pred, 1).argmax(1)
-        #print(Y, K_pred)
         avg_acc += float((Y == K_pred).float().mean()) / len(tr)
     toc = time()
     print(f'- {toc-tic:.1f}s - Loss: {avg_loss} - Acc: {avg_acc}')
