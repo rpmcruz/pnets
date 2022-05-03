@@ -19,18 +19,14 @@ import pnets as pn
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using', device)
 
-# we load the dataset once to extract values necessary for normalization
-dataset = getattr(pn.data, args.dataset)
-tr = dataset(args.datadir, args.download, 'train')
-center, max_value = pn.aug.compute_center_max(tr)
-
-# load the dataset again with augmentation
+# load the dataset with augmentation
 aug = pn.aug.Compose(
     pn.aug.Resample(args.npoints),
-    pn.aug.Normalize(center, max_value),
+    pn.aug.Normalize(),
     pn.aug.Jitter(),
     pn.aug.RandomRotation('Z', 0, 2*np.pi),
 )
+dataset = getattr(pn.data, args.dataset)
 tr = dataset(args.datadir, args.download, 'train', aug)
 K = len(tr.labels)
 tr = DataLoader(tr, 32, True, num_workers=2)

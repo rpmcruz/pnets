@@ -2,12 +2,6 @@
 
 import numpy as np
 
-def compute_center_max(ds):
-    P = np.concatenate([d[0] for d in ds], 1)
-    center = np.mean(P, 1, keepdims=True)
-    max_value = np.max(np.abs(P-center), 1, keepdims=True)
-    return center, max_value
-
 def rotation_matrix(axis, angle):
     cos_angle = np.cos(angle)
     sin_angle = np.sin(angle)
@@ -42,8 +36,10 @@ def Compose(*l):
         return P, S
     return f
 
-def Normalize(center, max_value):
+def Normalize():
     def f(P, S=None):
+        center = np.mean(P, 0, keepdims=True)
+        max_value = np.max(np.abs(P-center), 0, keepdims=True)
         P = (P-center)/max_value
         if S is None:
             return P
