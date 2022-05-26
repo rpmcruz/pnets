@@ -31,7 +31,7 @@ aug = pn.aug.Compose(
 )
 tr = pn.data.SemanticKITTI(args.datadir, 'train', aug)
 K = tr.nclasses
-tr = torch.utils.data.Subset(tr, range(10))  # TEMP
+#tr = torch.utils.data.Subset(tr, range(10))  # DEBUG
 tr = DataLoader(tr, 32, True, num_workers=4)
 
 # create the model
