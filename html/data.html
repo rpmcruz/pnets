@@ -40,6 +40,8 @@ import numpy as np
 import os
 
 class Sydney(Dataset):
+    &#39;&#39;&#39; Sydney Urban Object Dataset is a classification dataset. https://www.acfr.usyd.edu.au/papers/SydneyUrbanObjectsDataset.shtml &#39;&#39;&#39;
+
     segmentation = False
 
     def __init__(self, root, fold, transform, download=False):
@@ -74,6 +76,8 @@ class Sydney(Dataset):
         return P, Y
 
 class SemanticKITTI(Dataset):
+    &#39;&#39;&#39; Semantic KITTI is a dataset that includes semantic and instance segmentation, among others. Here we support semantic segmentation. http://www.semantic-kitti.org/ &#39;&#39;&#39;
+
     nclasses = 20  # or 19 if we ignore class 0
     classes_map = {  # like semantic-kitti-api, merge indistinguishable classes
         0: 0, 1: 0, 10: 1, 11: 2, 13: 5, 15: 3, 16: 5, 18: 4, 20: 5, 30: 6, 31: 7,
@@ -141,25 +145,14 @@ if __name__ == &#34;__main__&#34;:
 <span>(</span><span>root, fold, transform)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An abstract class representing a :class:<code>Dataset</code>.</p>
-<p>All datasets that represent a map from keys to data samples should subclass
-it. All subclasses should overwrite :meth:<code>__getitem__</code>, supporting fetching a
-data sample for a given key. Subclasses could also optionally overwrite
-:meth:<code>__len__</code>, which is expected to return the size of the dataset by many
-:class:<code>~torch.utils.data.Sampler</code> implementations and the default options
-of :class:<code>~torch.utils.data.DataLoader</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>:class:<code>~torch.utils.data.DataLoader</code> by default constructs a index
-sampler that yields integral indices.
-To make it work with a map-style
-dataset with non-integral indices/keys, a custom sampler must be provided.</p>
-</div></div>
+<div class="desc"><p>Semantic KITTI is a dataset that includes semantic and instance segmentation, among others. Here we support semantic segmentation. <a href="http://www.semantic-kitti.org/">http://www.semantic-kitti.org/</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SemanticKITTI(Dataset):
+    &#39;&#39;&#39; Semantic KITTI is a dataset that includes semantic and instance segmentation, among others. Here we support semantic segmentation. http://www.semantic-kitti.org/ &#39;&#39;&#39;
+
     nclasses = 20  # or 19 if we ignore class 0
     classes_map = {  # like semantic-kitti-api, merge indistinguishable classes
         0: 0, 1: 0, 10: 1, 11: 2, 13: 5, 15: 3, 16: 5, 18: 4, 20: 5, 30: 6, 31: 7,
@@ -219,25 +212,14 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <span>(</span><span>root, fold, transform, download=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An abstract class representing a :class:<code>Dataset</code>.</p>
-<p>All datasets that represent a map from keys to data samples should subclass
-it. All subclasses should overwrite :meth:<code>__getitem__</code>, supporting fetching a
-data sample for a given key. Subclasses could also optionally overwrite
-:meth:<code>__len__</code>, which is expected to return the size of the dataset by many
-:class:<code>~torch.utils.data.Sampler</code> implementations and the default options
-of :class:<code>~torch.utils.data.DataLoader</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>:class:<code>~torch.utils.data.DataLoader</code> by default constructs a index
-sampler that yields integral indices.
-To make it work with a map-style
-dataset with non-integral indices/keys, a custom sampler must be provided.</p>
-</div></div>
+<div class="desc"><p>Sydney Urban Object Dataset is a classification dataset. <a href="https://www.acfr.usyd.edu.au/papers/SydneyUrbanObjectsDataset.shtml">https://www.acfr.usyd.edu.au/papers/SydneyUrbanObjectsDataset.shtml</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Sydney(Dataset):
+    &#39;&#39;&#39; Sydney Urban Object Dataset is a classification dataset. https://www.acfr.usyd.edu.au/papers/SydneyUrbanObjectsDataset.shtml &#39;&#39;&#39;
+
     segmentation = False
 
     def __init__(self, root, fold, transform, download=False):

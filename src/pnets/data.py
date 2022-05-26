@@ -9,6 +9,8 @@ import numpy as np
 import os
 
 class Sydney(Dataset):
+    ''' Sydney Urban Object Dataset is a classification dataset. https://www.acfr.usyd.edu.au/papers/SydneyUrbanObjectsDataset.shtml '''
+
     segmentation = False
 
     def __init__(self, root, fold, transform, download=False):
@@ -43,6 +45,8 @@ class Sydney(Dataset):
         return P, Y
 
 class SemanticKITTI(Dataset):
+    ''' Semantic KITTI is a dataset that includes semantic and instance segmentation, among others. Here we support semantic segmentation. http://www.semantic-kitti.org/ '''
+
     nclasses = 20  # or 19 if we ignore class 0
     classes_map = {  # like semantic-kitti-api, merge indistinguishable classes
         0: 0, 1: 0, 10: 1, 11: 2, 13: 5, 15: 3, 16: 5, 18: 4, 20: 5, 30: 6, 31: 7,

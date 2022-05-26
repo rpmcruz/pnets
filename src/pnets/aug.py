@@ -1,5 +1,7 @@
 '''
 Point-cloud augmentation pipeline routines.
+
+Each augmentation routine `f(P, S)` must have as input the points and segmentation, and output the same. The segmentation can be `None` if there are no segmentations.
 '''
 
 import numpy as np
@@ -28,6 +30,7 @@ def rotation_matrix(axis, angle):
     return R
 
 def Compose(*l):
+    ''' Receives a sequence of augmentation routines. '''
     def f(P, S):
         for t in l:
             P, S = t(P, S)
@@ -35,6 +38,7 @@ def Compose(*l):
     return f
 
 def Normalize():
+    ''' Normalization to [0,1]. Formula: `(P-center)/max_value`. '''
     def f(P, S):
         center = np.mean(P, 0, keepdims=True)
         max_value = np.max(np.abs(P-center), 0, keepdims=True)
@@ -43,6 +47,7 @@ def Normalize():
     return f
 
 def Resample(npoints):
+    ''' Undersamples/oversamples in order to keep the number of points fixed to the specified number `npoints`. This is useful to keep each batch the same size. '''
     def f(P, S):
         ix = np.random.choice(P.shape[1], npoints)
         P = P[:, ix]
@@ -53,6 +58,7 @@ def Resample(npoints):
     return f
 
 def Jitter(sdev=0.02):
+    ''' Adds Gaussian noise with the given `sdev` deviation. '''
     def f(P, S):
         noise = np.random.randn(*P.shape)*sdev
         P += noise
@@ -60,6 +66,8 @@ def Jitter(sdev=0.02):
     return f
 
 def RandomRotation(axis, angle_min, angle_max):
+    ''' Performs a rotation along the given `axis` (X, Y, Z), randomly in the range `[angle_min, angle_max]` in radians. '''
+    assert axis in ('X', 'Y', 'Z')
     def f(P, S):
         angle = np.random.rand()*(angle_max-angle_min) + angle_min
         R = rotation_matrix(axis, angle)
