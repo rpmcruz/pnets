@@ -1,4 +1,6 @@
-# Augmentation techniques
+'''
+Point-cloud augmentation pipeline routines.
+'''
 
 import numpy as np
 
@@ -26,67 +28,53 @@ def rotation_matrix(axis, angle):
     return R
 
 def Compose(*l):
-    def f(P, S=None):
-        if S is None:
-            for t in l:
-                P = t(P)
-            return P
+    def f(P, S):
         for t in l:
             P, S = t(P, S)
         return P, S
     return f
 
 def Normalize():
-    def f(P, S=None):
+    def f(P, S):
         center = np.mean(P, 0, keepdims=True)
         max_value = np.max(np.abs(P-center), 0, keepdims=True)
         P = (P-center)/max_value
-        if S is None:
-            return P
-        S = (S-center)/max_value
         return P, S
     return f
 
 def Resample(npoints):
-    def f(P, S=None):
+    def f(P, S):
         ix = np.random.choice(P.shape[1], npoints)
         P = P[:, ix]
         if S is None:
-            return P
-        S = S[:, ix]
+            return P, S
+        S = S[ix]
         return P, S
     return f
 
 def Jitter(sdev=0.02):
-    def f(P, S=None):
+    def f(P, S):
         noise = np.random.randn(*P.shape)*sdev
         P += noise
-        if S is None:
-            return P
-        S += noise
         return P, S
     return f
 
 def RandomRotation(axis, angle_min, angle_max):
-    def f(P, S=None):
+    def f(P, S):
         angle = np.random.rand()*(angle_max-angle_min) + angle_min
         R = rotation_matrix(axis, angle)
         P = np.dot(R, P)
-        if S is None:
-            return P
-        S = np.dot(R, S)
         return P, S
     return f
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--datadir', default='data')
-    parser.add_argument('--download', action='store_true')
+    parser.add_argument('datadir')
     args = parser.parse_args()
     import data, plot
     t = RandomRotation('Z', 0, 2*np.pi)
-    ds = data.Sydney(args.datadir, args.download, 'train', t)
+    ds = data.Sydney(args.datadir, 'train', t)
     P, Y = ds[10]
     print(ds.labels[Y])
     plot.plot3d(P)

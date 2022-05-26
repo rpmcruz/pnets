@@ -1,9 +1,12 @@
+'''
+Example of training a semantic segmentation model (uses the SemanticKITTI
+dataset).
+'''
+
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('dataset', choices=['Sydney'])
-parser.add_argument('--datadir', default='data')
-parser.add_argument('--download', action='store_true')
-parser.add_argument('--epochs', default=50, type=int)
+parser.add_argument('--datadir', default='/data')
+parser.add_argument('--epochs', default=100, type=int)
 parser.add_argument('--npoints', default=2500, type=int)
 parser.add_argument('--feature-transform', action='store_true')
 args = parser.parse_args()
@@ -26,14 +29,15 @@ aug = pn.aug.Compose(
     pn.aug.Jitter(),
     pn.aug.RandomRotation('Z', 0, 2*np.pi),
 )
-dataset = getattr(pn.data, args.dataset)
-tr = dataset(args.datadir, args.download, 'train', aug)
-K = len(tr.labels)
-tr = DataLoader(tr, 32, True, num_workers=2)
+tr = pn.data.SemanticKITTI(args.datadir, 'train', aug)
+K = tr.nclasses
+tr = torch.utils.data.Subset(tr, range(10))  # TEMP
+tr = DataLoader(tr, 32, True, num_workers=4)
 
 # create the model
-model = pn.pointnet.PointNetCls(K).to(device)
+model = pn.pointnet.PointNetSeg(K).to(device)
 summary(model)
+print('model output:', model(torch.ones((10, 3, 2500), device=device))[0].shape)
 
 opt = torch.optim.Adam(model.parameters(), 1e-3)
 ce_loss = torch.nn.CrossEntropyLoss()
@@ -48,16 +52,19 @@ for epoch in range(args.epochs):
     for P, Y in tr:
         P = P.to(device)
         Y = Y.to(device)
-        opt.zero_grad()
 
         Y_pred, trans, trans_feat = model(P)
-        loss = F.nll_loss(Y_pred, Y)
+        loss = ce_loss(Y_pred, Y)
         if args.feature_transform:
             loss += feature_transform_regularizer(trans_feat) * 0.001
+
+        opt.zero_grad()
         loss.backward()
         opt.step()
         avg_loss += float(loss) / len(tr)
-        K_pred = torch.nn.functional.softmax(Y_pred, 1).argmax(1)
+        K_pred = F.softmax(Y_pred, 1).argmax(1)
         avg_acc += float((Y == K_pred).float().mean()) / len(tr)
     toc = time()
     print(f'- {toc-tic:.1f}s - Loss: {avg_loss} - Acc: {avg_acc}')
+
+torch.save(model, 'model-semantickitti.pth')

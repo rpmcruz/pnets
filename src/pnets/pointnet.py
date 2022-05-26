@@ -1,4 +1,10 @@
-# Original author: https://github.com/fxia22/pointnet.pytorch
+'''
+A PointNet implementation for classification and segmentation.
+We performed some changes on the implementations, namely no activation function
+is applied on the outputs (i.e. logits are produced).
+Original author: https://github.com/fxia22/pointnet.pytorch
+PointNet paper: https://arxiv.org/abs/1612.00593
+'''
 
 import torch
 from torch import nn
@@ -35,7 +41,7 @@ class STNkd(nn.Module):
         self.k = k
 
     def forward(self, x):
-        batchsize = x.size()[0]
+        batchsize = x.shape[0]
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -67,7 +73,7 @@ class PointNetfeat(nn.Module):
             self.fstn = STNkd(64)
 
     def forward(self, x):
-        n_pts = x.size()[2]
+        n_pts = x.shape[2]
         trans = self.stn(x)
         x = x.transpose(2, 1)
         x = torch.bmm(x, trans)
@@ -94,7 +100,7 @@ class PointNetfeat(nn.Module):
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
 class PointNetCls(nn.Module):
-    def __init__(self, k=2, feature_transform=False):
+    def __init__(self, k, feature_transform=False):
         super().__init__()
         self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
@@ -110,11 +116,10 @@ class PointNetCls(nn.Module):
         x = F.relu(self.bn1(self.fc1(x)))
         x = F.relu(self.bn2(self.dropout(self.fc2(x))))
         x = self.fc3(x)
-        return F.log_softmax(x, dim=1), trans, trans_feat
-
+        return x, trans, trans_feat
 
 class PointNetSeg(nn.Module):
-    def __init__(self, k = 2, feature_transform=False):
+    def __init__(self, k, feature_transform=False):
         super().__init__()
         self.k = k
         self.feature_transform=feature_transform
@@ -128,16 +133,12 @@ class PointNetSeg(nn.Module):
         self.bn3 = BatchNormIfSample(128)
 
     def forward(self, x):
-        batchsize = x.size()[0]
-        n_pts = x.size()[2]
+        batchsize, _, n_pts = x.shape
         x, trans, trans_feat = self.feat(x)
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
         x = self.conv4(x)
-        x = x.transpose(2,1).contiguous()
-        x = F.log_softmax(x.view(-1,self.k), dim=-1)
-        x = x.view(batchsize, n_pts, self.k)
         return x, trans, trans_feat
 
 if __name__ == '__main__':
@@ -145,4 +146,4 @@ if __name__ == '__main__':
     sim_data = Variable(torch.rand(32, 3, 2500))
     cls = PointNetCls(5)
     out, _, _ = cls(sim_data)
-    print('class', out.size())
+    print('class', out.shape)
