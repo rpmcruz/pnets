@@ -11,18 +11,20 @@ from torch import nn
 import torch.nn.functional as F
 
 def feature_transform_regularizer(M):
+    ''' You may use this regularizer in your loss, as recommended by the PointNet paper. The feature transform is returned by the PointNet model. '''
     I = torch.eye(M.shape[1], device=M.device)[None]
     loss = torch.mean(torch.norm(torch.bmm(M, M.transpose(2, 1)) - I, dim=(1, 2)))
     return loss
 
 class BatchNormIfSample(nn.BatchNorm1d):
-    # Applies batch-norm only if batchsize > 1, otherwise there would be an error
+    ''' Layer that applies batch-norm only if batchsize > 1, in order to avoid errors otherwise. '''
     def forward(self, x):
         if x.shape[0] == 1:
             return x
         return super().forward(x)
 
 class STNkd(nn.Module):
+    '''PointNet basic module.'''
     def __init__(self, k):
         super().__init__()
         self.conv1 = torch.nn.Conv1d(k, 64, 1)
@@ -58,6 +60,7 @@ class STNkd(nn.Module):
         return x
 
 class PointNetfeat(nn.Module):
+    '''PointNet backbone.'''
     def __init__(self, global_feat = True, feature_transform = False):
         super().__init__()
         self.stn = STNkd(3)
@@ -100,6 +103,7 @@ class PointNetfeat(nn.Module):
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
 class PointNetCls(nn.Module):
+    '''Classification PointNet.'''
     def __init__(self, k, feature_transform=False):
         super().__init__()
         self.feature_transform = feature_transform
@@ -119,6 +123,7 @@ class PointNetCls(nn.Module):
         return x, trans, trans_feat
 
 class PointNetSeg(nn.Module):
+    '''Segmentation PointNet.'''
     def __init__(self, k, feature_transform=False):
         super().__init__()
         self.k = k

@@ -11,7 +11,7 @@ The package is made of the following modules:
 * [`aug`](http://htmlpreview.github.io/?https://github.com/rpmcruz/objdetect/blob/main/html/aug.html): augmentation methods
 * [`data`](http://htmlpreview.github.io/?https://github.com/rpmcruz/objdetect/blob/main/html/data.html): datasets that we come with
 * [`plot`](http://htmlpreview.github.io/?https://github.com/rpmcruz/objdetect/blob/main/html/plot.html): plotting routines
-* [`pointnet`](http://htmlpreview.github.io/?https://github.com/rpmcruz/objdetect/blob/main/html/pointnet.html): a vanilla PointNet implementation (classifier and segmentation)
+* [`pointnet`](http://htmlpreview.github.io/?https://github.com/rpmcruz/objdetect/blob/main/html/pointnet.html): a vanilla PointNet implementation (for classification and segmentation)
 
 You can have a look at some examples under the `src` folder.
 
