@@ -88,7 +88,7 @@ class EricyiShapeNet(Dataset):
     labels = ['Airplane', 'Bag', 'Cap', 'Car', 'Chair', 'Earphone', 'Guitar', 'Knife', 'Lamp', 'Laptop', 'Motorbike', 'Mug', 'Pistol', 'Rocket', 'Skateboard', 'Table']
 
     def __init__(self, root, fold, transform, segmentation, download=False):
-        assert fold in ('train', 'test')
+        assert fold in ('train', 'val', 'test')
         if download:
             url = 'https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip'
             download_and_extract_archive(url, root)
@@ -126,6 +126,36 @@ class EricyiShapeNetClass(EricyiShapeNet):
 class EricyiShapeNetSeg(EricyiShapeNet):
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, True)
+
+class Stanford3d(Dataset):
+    map_classes = {'ceiling': 0, 'floor': 1, 'wall': 2, 'beam': 3, 'column': 4, 'window': 5, 'door': 6, 'table': 7, 'chair': 8, 'sofa': 9, 'bookcase': 10, 'board': 11, 'clutter': 12}
+    segmentation = True
+    nclasses = 13
+
+    def __init__(self, root, fold, transform):
+        assert fold in ('train', 'test')
+        self.root = os.path.join(root, 'Stanford3d', 'Stanford3dDataset_v1.2_Aligned_Version')
+        self.transform = transform
+        areas = [1, 2, 3, 4, 6] if fold == 'train' else [5]
+        self.rooms = [(f'Area_{area}', room) for area in areas for room in os.listdir(os.path.join(self.root, f'Area_{area}'))]
+
+    def __len__(self):
+        return len(self.rooms)
+
+    def __getitem__(self, i):
+        area, room = self.rooms[i]
+        segs = os.listdir(os.path.join(self.root, area, room, 'Annotations'))
+        P = []
+        S = []
+        for seg in segs:
+            pts = np.loadtxt(os.path.join(self.root, area, room, 'Annotations', seg), np.float32, usecols=[0, 1, 2])
+            P.append(pts)
+            S += [self.map_classes[seg.split('_')[0]]] * len(pts)
+        P = np.concatenate(P).T
+        S = np.array(S, np.int64)
+        if self.transform:
+            P, S = self.transform(P, S)
+        return P, S
 
 class Cache(Dataset):
     def __init__(self, ds, transform):
