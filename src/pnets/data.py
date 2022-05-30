@@ -6,6 +6,7 @@ channels first (i.e. 3xN), like PyTorch expects.
 from torch.utils.data import Dataset
 from torchvision.datasets.utils import download_and_extract_archive
 import numpy as np
+import json
 import os
 
 class Sydney(Dataset):
@@ -76,6 +77,68 @@ class SemanticKITTI(Dataset):
         S_fname = os.path.join(self.root, 'sequences', '%02d' % seq, 'labels', fname[:-3] + 'label')
         S = np.fromfile(S_fname, np.uint16).reshape((-1, 2))[:, 0]
         S = np.array([self.classes_map[s] for s in S], np.int64)
+        if self.transform:
+            P, S = self.transform(P, S)
+        return P, S
+
+class EricyiShapeNet(Dataset):
+    '''A ShapeNetCore version with segmentations.'''
+
+    labels = ['Airplane', 'Bag', 'Cap', 'Car', 'Chair', 'Earphone', 'Guitar', 'Knife', 'Lamp', 'Laptop', 'Motorbike', 'Mug', 'Pistol', 'Rocket', 'Skateboard', 'Table']
+
+    def __init__(self, root, fold, transform, segmentation, download=False):
+        assert fold in ('train', 'test')
+        if download:
+            url = 'https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip'
+            download_and_extract_archive(url, root)
+        self.root = os.path.join(root, 'ShapeNet', 'shapenetcore_partanno_segmentation_benchmark_v0')
+        self.transform = transform
+        self.segmentation = segmentation
+        catfile = os.path.join(self.root, 'synsetoffset2category.txt')
+        with open(catfile) as f:
+            cat2id = {line.split()[1]: line.split()[0] for line in f}
+        splitfile = os.path.join(self.root, 'train_test_split', f'shuffled_{fold}_file_list.json')
+        filelist = json.load(open(splitfile))
+        self.files = [f.split('/')[1:] for f in filelist]
+        self.classes = [self.labels.index(cat2id[f[0]]) for f in self.files]
+
+    def __getitem__(self, i):
+        category, uuid = self.files[i]
+        P_fname = os.path.join(self.root, category, 'points', uuid + '.pts')
+        P = np.loadtxt(P_fname).astype(np.float32).T
+        if self.segmentation:
+            S_fname = os.path.join(self.root, category, 'points_label', uuid + '.seg')
+            Y = np.loadtxt(S_fname).astype(np.int64)
+        else:
+            Y = self.classes[i]
+        if self.transform:
+            P, Y = self.transform(P, Y)
+        return P, Y
+
+    def __len__(self):
+        return len(self.datapath)
+
+class EricyiShapeNetClass(EricyiShapeNet):
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, False)
+
+class EricyiShapeNetSeg(EricyiShapeNet):
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, True)
+
+class Cache(Dataset):
+    def __init__(self, ds, transform):
+        self.ds = ds
+        self.transform = transform
+        self.cache = [None] * len(self.ds)
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, i):
+        if self.cache[i] is None:
+            self.cache[i] = self.ds[i]
+        P, S = self.cache[i]
         if self.transform:
             P, S = self.transform(P, S)
         return P, S

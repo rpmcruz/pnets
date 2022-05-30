@@ -37,6 +37,7 @@ channels first (i.e. 3xN), like PyTorch expects.
 from torch.utils.data import Dataset
 from torchvision.datasets.utils import download_and_extract_archive
 import numpy as np
+import json
 import os
 
 class Sydney(Dataset):
@@ -111,6 +112,68 @@ class SemanticKITTI(Dataset):
             P, S = self.transform(P, S)
         return P, S
 
+class EricyiShapeNet(Dataset):
+    &#39;&#39;&#39;A ShapeNetCore version with segmentations.&#39;&#39;&#39;
+
+    labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
+
+    def __init__(self, root, fold, transform, segmentation, download=False):
+        assert fold in (&#39;train&#39;, &#39;test&#39;)
+        if download:
+            url = &#39;https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip&#39;
+            download_and_extract_archive(url, root)
+        self.root = os.path.join(root, &#39;ShapeNet&#39;, &#39;shapenetcore_partanno_segmentation_benchmark_v0&#39;)
+        self.transform = transform
+        self.segmentation = segmentation
+        catfile = os.path.join(self.root, &#39;synsetoffset2category.txt&#39;)
+        with open(catfile) as f:
+            cat2id = {line.split()[1]: line.split()[0] for line in f}
+        splitfile = os.path.join(self.root, &#39;train_test_split&#39;, f&#39;shuffled_{fold}_file_list.json&#39;)
+        filelist = json.load(open(splitfile))
+        self.files = [f.split(&#39;/&#39;)[1:] for f in filelist]
+        self.classes = [self.labels.index(cat2id[f[0]]) for f in self.files]
+
+    def __getitem__(self, i):
+        category, uuid = self.files[i]
+        P_fname = os.path.join(self.root, category, &#39;points&#39;, uuid + &#39;.pts&#39;)
+        P = np.loadtxt(P_fname).astype(np.float32).T
+        if self.segmentation:
+            S_fname = os.path.join(self.root, category, &#39;points_label&#39;, uuid + &#39;.seg&#39;)
+            Y = np.loadtxt(S_fname).astype(np.int64)
+        else:
+            Y = self.classes[i]
+        if self.transform:
+            P, Y = self.transform(P, Y)
+        return P, Y
+
+    def __len__(self):
+        return len(self.datapath)
+
+class EricyiShapeNetClass(EricyiShapeNet):
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, False)
+
+class EricyiShapeNetSeg(EricyiShapeNet):
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, True)
+
+class Cache(Dataset):
+    def __init__(self, ds, transform):
+        self.ds = ds
+        self.transform = transform
+        self.cache = [None] * len(self.ds)
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, i):
+        if self.cache[i] is None:
+            self.cache[i] = self.ds[i]
+        P, S = self.cache[i]
+        if self.transform:
+            P, S = self.transform(P, S)
+        return P, S
+
 if __name__ == &#34;__main__&#34;:
     import argparse
     parser = argparse.ArgumentParser()
@@ -140,6 +203,159 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="data.Cache"><code class="flex name class">
+<span>class <span class="ident">Cache</span></span>
+<span>(</span><span>ds, transform)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An abstract class representing a :class:<code>Dataset</code>.</p>
+<p>All datasets that represent a map from keys to data samples should subclass
+it. All subclasses should overwrite :meth:<code>__getitem__</code>, supporting fetching a
+data sample for a given key. Subclasses could also optionally overwrite
+:meth:<code>__len__</code>, which is expected to return the size of the dataset by many
+:class:<code>~torch.utils.data.Sampler</code> implementations and the default options
+of :class:<code>~torch.utils.data.DataLoader</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>:class:<code>~torch.utils.data.DataLoader</code> by default constructs a index
+sampler that yields integral indices.
+To make it work with a map-style
+dataset with non-integral indices/keys, a custom sampler must be provided.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Cache(Dataset):
+    def __init__(self, ds, transform):
+        self.ds = ds
+        self.transform = transform
+        self.cache = [None] * len(self.ds)
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, i):
+        if self.cache[i] is None:
+            self.cache[i] = self.ds[i]
+        P, S = self.cache[i]
+        if self.transform:
+            P, S = self.transform(P, S)
+        return P, S</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+</dd>
+<dt id="data.EricyiShapeNet"><code class="flex name class">
+<span>class <span class="ident">EricyiShapeNet</span></span>
+<span>(</span><span>root, fold, transform, segmentation, download=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A ShapeNetCore version with segmentations.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EricyiShapeNet(Dataset):
+    &#39;&#39;&#39;A ShapeNetCore version with segmentations.&#39;&#39;&#39;
+
+    labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
+
+    def __init__(self, root, fold, transform, segmentation, download=False):
+        assert fold in (&#39;train&#39;, &#39;test&#39;)
+        if download:
+            url = &#39;https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip&#39;
+            download_and_extract_archive(url, root)
+        self.root = os.path.join(root, &#39;ShapeNet&#39;, &#39;shapenetcore_partanno_segmentation_benchmark_v0&#39;)
+        self.transform = transform
+        self.segmentation = segmentation
+        catfile = os.path.join(self.root, &#39;synsetoffset2category.txt&#39;)
+        with open(catfile) as f:
+            cat2id = {line.split()[1]: line.split()[0] for line in f}
+        splitfile = os.path.join(self.root, &#39;train_test_split&#39;, f&#39;shuffled_{fold}_file_list.json&#39;)
+        filelist = json.load(open(splitfile))
+        self.files = [f.split(&#39;/&#39;)[1:] for f in filelist]
+        self.classes = [self.labels.index(cat2id[f[0]]) for f in self.files]
+
+    def __getitem__(self, i):
+        category, uuid = self.files[i]
+        P_fname = os.path.join(self.root, category, &#39;points&#39;, uuid + &#39;.pts&#39;)
+        P = np.loadtxt(P_fname).astype(np.float32).T
+        if self.segmentation:
+            S_fname = os.path.join(self.root, category, &#39;points_label&#39;, uuid + &#39;.seg&#39;)
+            Y = np.loadtxt(S_fname).astype(np.int64)
+        else:
+            Y = self.classes[i]
+        if self.transform:
+            P, Y = self.transform(P, Y)
+        return P, Y
+
+    def __len__(self):
+        return len(self.datapath)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="data.EricyiShapeNetClass" href="#data.EricyiShapeNetClass">EricyiShapeNetClass</a></li>
+<li><a title="data.EricyiShapeNetSeg" href="#data.EricyiShapeNetSeg">EricyiShapeNetSeg</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="data.EricyiShapeNet.labels"><code class="name">var <span class="ident">labels</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="data.EricyiShapeNetClass"><code class="flex name class">
+<span>class <span class="ident">EricyiShapeNetClass</span></span>
+<span>(</span><span>root, fold, transform)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A ShapeNetCore version with segmentations.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EricyiShapeNetClass(EricyiShapeNet):
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, False)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="data.EricyiShapeNet" href="#data.EricyiShapeNet">EricyiShapeNet</a></li>
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+</dd>
+<dt id="data.EricyiShapeNetSeg"><code class="flex name class">
+<span>class <span class="ident">EricyiShapeNetSeg</span></span>
+<span>(</span><span>root, fold, transform)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A ShapeNetCore version with segmentations.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EricyiShapeNetSeg(EricyiShapeNet):
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="data.EricyiShapeNet" href="#data.EricyiShapeNet">EricyiShapeNet</a></li>
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+</dd>
 <dt id="data.SemanticKITTI"><code class="flex name class">
 <span>class <span class="ident">SemanticKITTI</span></span>
 <span>(</span><span>root, fold, transform)</span>
@@ -277,6 +493,21 @@ if __name__ == &#34;__main__&#34;:
 <ul id="index">
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="data.Cache" href="#data.Cache">Cache</a></code></h4>
+</li>
+<li>
+<h4><code><a title="data.EricyiShapeNet" href="#data.EricyiShapeNet">EricyiShapeNet</a></code></h4>
+<ul class="">
+<li><code><a title="data.EricyiShapeNet.labels" href="#data.EricyiShapeNet.labels">labels</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="data.EricyiShapeNetClass" href="#data.EricyiShapeNetClass">EricyiShapeNetClass</a></code></h4>
+</li>
+<li>
+<h4><code><a title="data.EricyiShapeNetSeg" href="#data.EricyiShapeNetSeg">EricyiShapeNetSeg</a></code></h4>
+</li>
 <li>
 <h4><code><a title="data.SemanticKITTI" href="#data.SemanticKITTI">SemanticKITTI</a></code></h4>
 <ul class="">

@@ -29,8 +29,9 @@ aug = pn.aug.Compose(
     pn.aug.Jitter(),
     pn.aug.RandomRotation('Z', 0, 2*np.pi),
 )
-tr = pn.data.SemanticKITTI(args.datadir, 'train', aug)
+tr = pn.data.EricyiShapeNetSeg(args.datadir, 'train', aug)
 K = tr.nclasses
+#tr = pn.data.Cache(tr, aug)
 #tr = torch.utils.data.Subset(tr, range(10))  # DEBUG
 tr = DataLoader(tr, 32, True, num_workers=4)
 
