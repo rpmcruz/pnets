@@ -162,6 +162,7 @@ class Stanford3d(Dataset):
         return P, S
 
 class Cache(Dataset):
+    '''Caches the provided dataset. If you use this class, you probably want to define `transform=None` when creating the provided dataset.'''
     def __init__(self, ds, transform):
         self.ds = ds
         self.transform = transform

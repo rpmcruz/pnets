@@ -193,6 +193,7 @@ class Stanford3d(Dataset):
         return P, S
 
 class Cache(Dataset):
+    &#39;&#39;&#39;Caches the provided dataset. If you use this class, you probably want to define `transform=None` when creating the provided dataset.&#39;&#39;&#39;
     def __init__(self, ds, transform):
         self.ds = ds
         self.transform = transform
@@ -243,25 +244,13 @@ if __name__ == &#34;__main__&#34;:
 <span>(</span><span>ds, transform)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An abstract class representing a :class:<code>Dataset</code>.</p>
-<p>All datasets that represent a map from keys to data samples should subclass
-it. All subclasses should overwrite :meth:<code>__getitem__</code>, supporting fetching a
-data sample for a given key. Subclasses could also optionally overwrite
-:meth:<code>__len__</code>, which is expected to return the size of the dataset by many
-:class:<code>~torch.utils.data.Sampler</code> implementations and the default options
-of :class:<code>~torch.utils.data.DataLoader</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>:class:<code>~torch.utils.data.DataLoader</code> by default constructs a index
-sampler that yields integral indices.
-To make it work with a map-style
-dataset with non-integral indices/keys, a custom sampler must be provided.</p>
-</div></div>
+<div class="desc"><p>Caches the provided dataset. If you use this class, you probably want to define <code>transform=None</code> when creating the provided dataset.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Cache(Dataset):
+    &#39;&#39;&#39;Caches the provided dataset. If you use this class, you probably want to define `transform=None` when creating the provided dataset.&#39;&#39;&#39;
     def __init__(self, ds, transform):
         self.ds = ds
         self.transform = transform
