@@ -151,14 +151,18 @@ class EricyiShapeNet(Dataset):
         return P, Y
 
 class EricyiShapeNetClass(EricyiShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `EricyiShapeNet` with `segmentation=False`.&#39;&#39;&#39;
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, False)
 
 class EricyiShapeNetSeg(EricyiShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `EricyiShapeNet` with `segmentation=True`.&#39;&#39;&#39;
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, True)
 
 class Stanford3d(Dataset):
+    &#39;&#39;&#39;Standford3d segmentation dataset from http://buildingparser.stanford.edu/dataset.html&#39;&#39;&#39;
+
     map_classes = {&#39;ceiling&#39;: 0, &#39;floor&#39;: 1, &#39;wall&#39;: 2, &#39;beam&#39;: 3, &#39;column&#39;: 4, &#39;window&#39;: 5, &#39;door&#39;: 6, &#39;table&#39;: 7, &#39;chair&#39;: 8, &#39;sofa&#39;: 9, &#39;bookcase&#39;: 10, &#39;board&#39;: 11, &#39;clutter&#39;: 12}
     segmentation = True
     nclasses = 13
@@ -175,7 +179,7 @@ class Stanford3d(Dataset):
 
     def __getitem__(self, i):
         area, room = self.rooms[i]
-        segs = os.listdir(os.path.join(self.root, area, room, &#39;Annotations&#39;))
+        segs = [f for f in os.listdir(os.path.join(self.root, area, room, &#39;Annotations&#39;)) if f.endswith(&#39;.txt&#39;) and f.split(&#39;_&#39;)[0] in self.map_classes]
         P = []
         S = []
         for seg in segs:
@@ -355,12 +359,13 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <span>(</span><span>root, fold, transform)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A ShapeNetCore version with segmentations.</p></div>
+<div class="desc"><p>Convenience wrapper for <code><a title="data.EricyiShapeNet" href="#data.EricyiShapeNet">EricyiShapeNet</a></code> with <code>segmentation=False</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EricyiShapeNetClass(EricyiShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `EricyiShapeNet` with `segmentation=False`.&#39;&#39;&#39;
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, False)</code></pre>
 </details>
@@ -376,12 +381,13 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <span>(</span><span>root, fold, transform)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A ShapeNetCore version with segmentations.</p></div>
+<div class="desc"><p>Convenience wrapper for <code><a title="data.EricyiShapeNet" href="#data.EricyiShapeNet">EricyiShapeNet</a></code> with <code>segmentation=True</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EricyiShapeNetSeg(EricyiShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `EricyiShapeNet` with `segmentation=True`.&#39;&#39;&#39;
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, True)</code></pre>
 </details>
@@ -464,25 +470,14 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <span>(</span><span>root, fold, transform)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An abstract class representing a :class:<code>Dataset</code>.</p>
-<p>All datasets that represent a map from keys to data samples should subclass
-it. All subclasses should overwrite :meth:<code>__getitem__</code>, supporting fetching a
-data sample for a given key. Subclasses could also optionally overwrite
-:meth:<code>__len__</code>, which is expected to return the size of the dataset by many
-:class:<code>~torch.utils.data.Sampler</code> implementations and the default options
-of :class:<code>~torch.utils.data.DataLoader</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>:class:<code>~torch.utils.data.DataLoader</code> by default constructs a index
-sampler that yields integral indices.
-To make it work with a map-style
-dataset with non-integral indices/keys, a custom sampler must be provided.</p>
-</div></div>
+<div class="desc"><p>Standford3d segmentation dataset from <a href="http://buildingparser.stanford.edu/dataset.html">http://buildingparser.stanford.edu/dataset.html</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Stanford3d(Dataset):
+    &#39;&#39;&#39;Standford3d segmentation dataset from http://buildingparser.stanford.edu/dataset.html&#39;&#39;&#39;
+
     map_classes = {&#39;ceiling&#39;: 0, &#39;floor&#39;: 1, &#39;wall&#39;: 2, &#39;beam&#39;: 3, &#39;column&#39;: 4, &#39;window&#39;: 5, &#39;door&#39;: 6, &#39;table&#39;: 7, &#39;chair&#39;: 8, &#39;sofa&#39;: 9, &#39;bookcase&#39;: 10, &#39;board&#39;: 11, &#39;clutter&#39;: 12}
     segmentation = True
     nclasses = 13
@@ -499,7 +494,7 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 
     def __getitem__(self, i):
         area, room = self.rooms[i]
-        segs = os.listdir(os.path.join(self.root, area, room, &#39;Annotations&#39;))
+        segs = [f for f in os.listdir(os.path.join(self.root, area, room, &#39;Annotations&#39;)) if f.endswith(&#39;.txt&#39;) and f.split(&#39;_&#39;)[0] in self.map_classes]
         P = []
         S = []
         for seg in segs:

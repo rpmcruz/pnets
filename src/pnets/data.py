@@ -120,14 +120,18 @@ class EricyiShapeNet(Dataset):
         return P, Y
 
 class EricyiShapeNetClass(EricyiShapeNet):
+    '''Convenience wrapper for `EricyiShapeNet` with `segmentation=False`.'''
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, False)
 
 class EricyiShapeNetSeg(EricyiShapeNet):
+    '''Convenience wrapper for `EricyiShapeNet` with `segmentation=True`.'''
     def __init__(self, root, fold, transform):
         super().__init__(root, fold, transform, True)
 
 class Stanford3d(Dataset):
+    '''Standford3d segmentation dataset from http://buildingparser.stanford.edu/dataset.html'''
+
     map_classes = {'ceiling': 0, 'floor': 1, 'wall': 2, 'beam': 3, 'column': 4, 'window': 5, 'door': 6, 'table': 7, 'chair': 8, 'sofa': 9, 'bookcase': 10, 'board': 11, 'clutter': 12}
     segmentation = True
     nclasses = 13
@@ -144,7 +148,7 @@ class Stanford3d(Dataset):
 
     def __getitem__(self, i):
         area, room = self.rooms[i]
-        segs = os.listdir(os.path.join(self.root, area, room, 'Annotations'))
+        segs = [f for f in os.listdir(os.path.join(self.root, area, room, 'Annotations')) if f.endswith('.txt') and f.split('_')[0] in self.map_classes]
         P = []
         S = []
         for seg in segs:

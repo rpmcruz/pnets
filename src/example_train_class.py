@@ -31,7 +31,7 @@ aug = pn.aug.Compose(
 tr = pn.data.Sydney(args.datadir, 'train', aug)
 K = tr.nclasses
 #tr = torch.utils.data.Subset(tr, range(10))  # DEBUG
-tr = DataLoader(tr, 32, True, num_workers=4)
+tr = DataLoader(tr, 32, True, num_workers=4, pin_memory=True)
 
 # create the model
 model = pn.pointnet.PointNetCls(K).to(device)

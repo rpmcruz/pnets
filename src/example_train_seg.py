@@ -5,10 +5,12 @@ dataset).
 
 import argparse
 parser = argparse.ArgumentParser()
+parser.add_argument('dataset', choices=['SemanticKITTI', 'EricyiShapeNetSeg', 'Stanford3d'])
 parser.add_argument('--datadir', default='/data')
 parser.add_argument('--epochs', default=100, type=int)
 parser.add_argument('--npoints', default=2500, type=int)
 parser.add_argument('--feature-transform', action='store_true')
+parser.add_argument('--cache', action='store_true')
 args = parser.parse_args()
 
 from torchinfo import summary
@@ -29,11 +31,13 @@ aug = pn.aug.Compose(
     pn.aug.Jitter(),
     pn.aug.RandomRotation('Z', 0, 2*np.pi),
 )
-tr = pn.data.EricyiShapeNetSeg(args.datadir, 'train', aug)
+tr = getattr(pn.data, args.dataset)
+tr = tr(args.datadir, 'train', None if args.cache else aug)
 K = tr.nclasses
-#tr = pn.data.Cache(tr, aug)
+if args.cache:
+    tr = pn.data.Cache(tr, aug)
 #tr = torch.utils.data.Subset(tr, range(10))  # DEBUG
-tr = DataLoader(tr, 32, True, num_workers=4)
+tr = DataLoader(tr, 32, True, num_workers=4, pin_memory=True)
 
 # create the model
 model = pn.pointnet.PointNetSeg(K).to(device)
