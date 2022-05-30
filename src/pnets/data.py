@@ -84,6 +84,7 @@ class SemanticKITTI(Dataset):
 class EricyiShapeNet(Dataset):
     '''A ShapeNetCore version with segmentations.'''
 
+    nclasses = 16
     labels = ['Airplane', 'Bag', 'Cap', 'Car', 'Chair', 'Earphone', 'Guitar', 'Knife', 'Lamp', 'Laptop', 'Motorbike', 'Mug', 'Pistol', 'Rocket', 'Skateboard', 'Table']
 
     def __init__(self, root, fold, transform, segmentation, download=False):
@@ -102,6 +103,9 @@ class EricyiShapeNet(Dataset):
         self.files = [f.split('/')[1:] for f in filelist]
         self.classes = [self.labels.index(cat2id[f[0]]) for f in self.files]
 
+    def __len__(self):
+        return len(self.files)
+
     def __getitem__(self, i):
         category, uuid = self.files[i]
         P_fname = os.path.join(self.root, category, 'points', uuid + '.pts')
@@ -114,9 +118,6 @@ class EricyiShapeNet(Dataset):
         if self.transform:
             P, Y = self.transform(P, Y)
         return P, Y
-
-    def __len__(self):
-        return len(self.datapath)
 
 class EricyiShapeNetClass(EricyiShapeNet):
     def __init__(self, root, fold, transform):

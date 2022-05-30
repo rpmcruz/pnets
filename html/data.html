@@ -115,6 +115,7 @@ class SemanticKITTI(Dataset):
 class EricyiShapeNet(Dataset):
     &#39;&#39;&#39;A ShapeNetCore version with segmentations.&#39;&#39;&#39;
 
+    nclasses = 16
     labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
 
     def __init__(self, root, fold, transform, segmentation, download=False):
@@ -133,6 +134,9 @@ class EricyiShapeNet(Dataset):
         self.files = [f.split(&#39;/&#39;)[1:] for f in filelist]
         self.classes = [self.labels.index(cat2id[f[0]]) for f in self.files]
 
+    def __len__(self):
+        return len(self.files)
+
     def __getitem__(self, i):
         category, uuid = self.files[i]
         P_fname = os.path.join(self.root, category, &#39;points&#39;, uuid + &#39;.pts&#39;)
@@ -145,9 +149,6 @@ class EricyiShapeNet(Dataset):
         if self.transform:
             P, Y = self.transform(P, Y)
         return P, Y
-
-    def __len__(self):
-        return len(self.datapath)
 
 class EricyiShapeNetClass(EricyiShapeNet):
     def __init__(self, root, fold, transform):
@@ -262,6 +263,7 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <pre><code class="python">class EricyiShapeNet(Dataset):
     &#39;&#39;&#39;A ShapeNetCore version with segmentations.&#39;&#39;&#39;
 
+    nclasses = 16
     labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
 
     def __init__(self, root, fold, transform, segmentation, download=False):
@@ -280,6 +282,9 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
         self.files = [f.split(&#39;/&#39;)[1:] for f in filelist]
         self.classes = [self.labels.index(cat2id[f[0]]) for f in self.files]
 
+    def __len__(self):
+        return len(self.files)
+
     def __getitem__(self, i):
         category, uuid = self.files[i]
         P_fname = os.path.join(self.root, category, &#39;points&#39;, uuid + &#39;.pts&#39;)
@@ -291,10 +296,7 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
             Y = self.classes[i]
         if self.transform:
             P, Y = self.transform(P, Y)
-        return P, Y
-
-    def __len__(self):
-        return len(self.datapath)</code></pre>
+        return P, Y</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -309,6 +311,10 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <h3>Class variables</h3>
 <dl>
 <dt id="data.EricyiShapeNet.labels"><code class="name">var <span class="ident">labels</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="data.EricyiShapeNet.nclasses"><code class="name">var <span class="ident">nclasses</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -500,6 +506,7 @@ dataset with non-integral indices/keys, a custom sampler must be provided.</p>
 <h4><code><a title="data.EricyiShapeNet" href="#data.EricyiShapeNet">EricyiShapeNet</a></code></h4>
 <ul class="">
 <li><code><a title="data.EricyiShapeNet.labels" href="#data.EricyiShapeNet.labels">labels</a></code></li>
+<li><code><a title="data.EricyiShapeNet.nclasses" href="#data.EricyiShapeNet.nclasses">nclasses</a></code></li>
 </ul>
 </li>
 <li>
