@@ -112,6 +112,52 @@ class SemanticKITTI(Dataset):
             P, S = self.transform(P, S)
         return P, S
 
+class ICCV17ShapeNet(Dataset):
+    &#39;&#39;&#39;A ShapeNetCore version with segmentations used for an ICCV17 competition. https://shapenet.cs.stanford.edu/iccv17/&#39;&#39;&#39;
+
+    nclasses = 16
+    labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
+    folder_to_label = [&#39;02691156&#39;, &#39;02773838&#39;, &#39;02954340&#39;, &#39;02958343&#39;, &#39;03001627&#39;, &#39;03261776&#39;, &#39;03467517&#39;, &#39;03624134&#39;, &#39;03636649&#39;, &#39;03642806&#39;, &#39;03790512&#39;, &#39;03797390&#39;, &#39;03948459&#39;, &#39;04099429&#39;, &#39;04225987&#39;, &#39;04379243&#39;]
+
+    def __init__(self, root, fold, transform, segmentation):
+        assert fold in (&#39;train&#39;, &#39;val&#39;, &#39;test&#39;)
+        root = os.path.join(root, &#39;ShapeNet&#39;, &#39;iccv17&#39;, &#39;partseg&#39;)
+        root_pts = os.path.join(root, f&#39;{fold}_data&#39;)
+        root_segs = os.path.join(root, f&#39;{fold}_label&#39;)
+        self.transform = transform
+        self.segmentation = segmentation
+        self.classes = []
+        self.objfnames = []
+        self.segfnames = []
+        for catname in sorted(os.listdir(root_pts)):
+            for objname in os.listdir(os.path.join(root_pts, catname)):
+                self.objfnames.append(os.path.join(root_pts, catname, objname))
+                self.segfnames.append(os.path.join(root_segs, catname, objname[:-3] + &#39;seg&#39;))
+                self.classes.append(self.folder_to_label.index(catname))
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, i):
+        P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
+        if self.segmentation:
+            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)
+        else:
+            Y = self.classes[i]
+        if self.transform:
+            P, Y = self.transform(P, Y)
+        return P, Y
+
+class ICCV17ShapeNetClass(ICCV17ShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `ICCV17ShapeNet` with `segmentation=False`.&#39;&#39;&#39;
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, False)
+
+class ICCV17ShapeNetSeg(ICCV17ShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `ICCV17ShapeNet` with `segmentation=True`.&#39;&#39;&#39;
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, True)
+
 class EricyiShapeNet(Dataset):
     &#39;&#39;&#39;A ShapeNetCore version with segmentations.&#39;&#39;&#39;
 
@@ -387,6 +433,122 @@ if __name__ == &#34;__main__&#34;:
 <li>typing.Generic</li>
 </ul>
 </dd>
+<dt id="data.ICCV17ShapeNet"><code class="flex name class">
+<span>class <span class="ident">ICCV17ShapeNet</span></span>
+<span>(</span><span>root, fold, transform, segmentation)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A ShapeNetCore version with segmentations used for an ICCV17 competition. <a href="https://shapenet.cs.stanford.edu/iccv17/">https://shapenet.cs.stanford.edu/iccv17/</a></p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ICCV17ShapeNet(Dataset):
+    &#39;&#39;&#39;A ShapeNetCore version with segmentations used for an ICCV17 competition. https://shapenet.cs.stanford.edu/iccv17/&#39;&#39;&#39;
+
+    nclasses = 16
+    labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
+    folder_to_label = [&#39;02691156&#39;, &#39;02773838&#39;, &#39;02954340&#39;, &#39;02958343&#39;, &#39;03001627&#39;, &#39;03261776&#39;, &#39;03467517&#39;, &#39;03624134&#39;, &#39;03636649&#39;, &#39;03642806&#39;, &#39;03790512&#39;, &#39;03797390&#39;, &#39;03948459&#39;, &#39;04099429&#39;, &#39;04225987&#39;, &#39;04379243&#39;]
+
+    def __init__(self, root, fold, transform, segmentation):
+        assert fold in (&#39;train&#39;, &#39;val&#39;, &#39;test&#39;)
+        root = os.path.join(root, &#39;ShapeNet&#39;, &#39;iccv17&#39;, &#39;partseg&#39;)
+        root_pts = os.path.join(root, f&#39;{fold}_data&#39;)
+        root_segs = os.path.join(root, f&#39;{fold}_label&#39;)
+        self.transform = transform
+        self.segmentation = segmentation
+        self.classes = []
+        self.objfnames = []
+        self.segfnames = []
+        for catname in sorted(os.listdir(root_pts)):
+            for objname in os.listdir(os.path.join(root_pts, catname)):
+                self.objfnames.append(os.path.join(root_pts, catname, objname))
+                self.segfnames.append(os.path.join(root_segs, catname, objname[:-3] + &#39;seg&#39;))
+                self.classes.append(self.folder_to_label.index(catname))
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, i):
+        P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
+        if self.segmentation:
+            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)
+        else:
+            Y = self.classes[i]
+        if self.transform:
+            P, Y = self.transform(P, Y)
+        return P, Y</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="data.ICCV17ShapeNetClass" href="#data.ICCV17ShapeNetClass">ICCV17ShapeNetClass</a></li>
+<li><a title="data.ICCV17ShapeNetSeg" href="#data.ICCV17ShapeNetSeg">ICCV17ShapeNetSeg</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="data.ICCV17ShapeNet.folder_to_label"><code class="name">var <span class="ident">folder_to_label</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="data.ICCV17ShapeNet.labels"><code class="name">var <span class="ident">labels</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="data.ICCV17ShapeNet.nclasses"><code class="name">var <span class="ident">nclasses</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="data.ICCV17ShapeNetClass"><code class="flex name class">
+<span>class <span class="ident">ICCV17ShapeNetClass</span></span>
+<span>(</span><span>root, fold, transform)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convenience wrapper for <code><a title="data.ICCV17ShapeNet" href="#data.ICCV17ShapeNet">ICCV17ShapeNet</a></code> with <code>segmentation=False</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ICCV17ShapeNetClass(ICCV17ShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `ICCV17ShapeNet` with `segmentation=False`.&#39;&#39;&#39;
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, False)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="data.ICCV17ShapeNet" href="#data.ICCV17ShapeNet">ICCV17ShapeNet</a></li>
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+</dd>
+<dt id="data.ICCV17ShapeNetSeg"><code class="flex name class">
+<span>class <span class="ident">ICCV17ShapeNetSeg</span></span>
+<span>(</span><span>root, fold, transform)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convenience wrapper for <code><a title="data.ICCV17ShapeNet" href="#data.ICCV17ShapeNet">ICCV17ShapeNet</a></code> with <code>segmentation=True</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ICCV17ShapeNetSeg(ICCV17ShapeNet):
+    &#39;&#39;&#39;Convenience wrapper for `ICCV17ShapeNet` with `segmentation=True`.&#39;&#39;&#39;
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="data.ICCV17ShapeNet" href="#data.ICCV17ShapeNet">ICCV17ShapeNet</a></li>
+<li>torch.utils.data.dataset.Dataset</li>
+<li>typing.Generic</li>
+</ul>
+</dd>
 <dt id="data.SemanticKITTI"><code class="flex name class">
 <span>class <span class="ident">SemanticKITTI</span></span>
 <span>(</span><span>root, fold, transform)</span>
@@ -602,6 +764,20 @@ if __name__ == &#34;__main__&#34;:
 </li>
 <li>
 <h4><code><a title="data.EricyiShapeNetSeg" href="#data.EricyiShapeNetSeg">EricyiShapeNetSeg</a></code></h4>
+</li>
+<li>
+<h4><code><a title="data.ICCV17ShapeNet" href="#data.ICCV17ShapeNet">ICCV17ShapeNet</a></code></h4>
+<ul class="">
+<li><code><a title="data.ICCV17ShapeNet.folder_to_label" href="#data.ICCV17ShapeNet.folder_to_label">folder_to_label</a></code></li>
+<li><code><a title="data.ICCV17ShapeNet.labels" href="#data.ICCV17ShapeNet.labels">labels</a></code></li>
+<li><code><a title="data.ICCV17ShapeNet.nclasses" href="#data.ICCV17ShapeNet.nclasses">nclasses</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="data.ICCV17ShapeNetClass" href="#data.ICCV17ShapeNetClass">ICCV17ShapeNetClass</a></code></h4>
+</li>
+<li>
+<h4><code><a title="data.ICCV17ShapeNetSeg" href="#data.ICCV17ShapeNetSeg">ICCV17ShapeNetSeg</a></code></h4>
 </li>
 <li>
 <h4><code><a title="data.SemanticKITTI" href="#data.SemanticKITTI">SemanticKITTI</a></code></h4>

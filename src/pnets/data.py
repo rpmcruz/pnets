@@ -81,6 +81,52 @@ class SemanticKITTI(Dataset):
             P, S = self.transform(P, S)
         return P, S
 
+class ICCV17ShapeNet(Dataset):
+    '''A ShapeNetCore version with segmentations used for an ICCV17 competition. https://shapenet.cs.stanford.edu/iccv17/'''
+
+    nclasses = 16
+    labels = ['Airplane', 'Bag', 'Cap', 'Car', 'Chair', 'Earphone', 'Guitar', 'Knife', 'Lamp', 'Laptop', 'Motorbike', 'Mug', 'Pistol', 'Rocket', 'Skateboard', 'Table']
+    folder_to_label = ['02691156', '02773838', '02954340', '02958343', '03001627', '03261776', '03467517', '03624134', '03636649', '03642806', '03790512', '03797390', '03948459', '04099429', '04225987', '04379243']
+
+    def __init__(self, root, fold, transform, segmentation):
+        assert fold in ('train', 'val', 'test')
+        root = os.path.join(root, 'ShapeNet', 'iccv17', 'partseg')
+        root_pts = os.path.join(root, f'{fold}_data')
+        root_segs = os.path.join(root, f'{fold}_label')
+        self.transform = transform
+        self.segmentation = segmentation
+        self.classes = []
+        self.objfnames = []
+        self.segfnames = []
+        for catname in sorted(os.listdir(root_pts)):
+            for objname in os.listdir(os.path.join(root_pts, catname)):
+                self.objfnames.append(os.path.join(root_pts, catname, objname))
+                self.segfnames.append(os.path.join(root_segs, catname, objname[:-3] + 'seg'))
+                self.classes.append(self.folder_to_label.index(catname))
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, i):
+        P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
+        if self.segmentation:
+            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)
+        else:
+            Y = self.classes[i]
+        if self.transform:
+            P, Y = self.transform(P, Y)
+        return P, Y
+
+class ICCV17ShapeNetClass(ICCV17ShapeNet):
+    '''Convenience wrapper for `ICCV17ShapeNet` with `segmentation=False`.'''
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, False)
+
+class ICCV17ShapeNetSeg(ICCV17ShapeNet):
+    '''Convenience wrapper for `ICCV17ShapeNet` with `segmentation=True`.'''
+    def __init__(self, root, fold, transform):
+        super().__init__(root, fold, transform, True)
+
 class EricyiShapeNet(Dataset):
     '''A ShapeNetCore version with segmentations.'''
 
