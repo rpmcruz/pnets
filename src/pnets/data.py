@@ -105,7 +105,7 @@ class ICCV17ShapeNet(Dataset):
                 self.classes.append(self.folder_to_label.index(catname))
 
     def __len__(self):
-        return len(self.files)
+        return len(self.objfnames)
 
     def __getitem__(self, i):
         P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
