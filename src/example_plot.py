@@ -8,7 +8,7 @@ $ python3 example_plot.py SemanticKITTI 0 --topview
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('dataset', choices=['Sydney', 'SemanticKITTI', 'ICCV17ShapeNetSeg', 'ICCV17ShapeNetClass', 'EricyiShapeNet', 'Stanford3d'])
+parser.add_argument('dataset', choices=['Sydney', 'SemanticKITTI', 'ICCV17ShapeNetSeg', 'ICCV17ShapeNetClass', 'EricyiShapeNetSeg', 'EricyiShapeNetClass', 'Stanford3d'])
 parser.add_argument('i', type=int)
 parser.add_argument('--datadir', default='/data')
 parser.add_argument('--topview', action='store_true')

@@ -4,7 +4,7 @@ Example of training a classifier (uses the Sydney dataset).
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('dataset', choices=['Sydney', 'ICCV17ShapeNetClass'])
+parser.add_argument('dataset', choices=['Sydney', 'ICCV17ShapeNetClass', 'EricyiShapeNetClass'])
 parser.add_argument('--datadir', default='/data')
 parser.add_argument('--epochs', default=100, type=int)
 parser.add_argument('--npoints', default=2500, type=int)
