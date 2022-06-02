@@ -187,7 +187,7 @@ class Stanford3d(Dataset):
         self.root = os.path.join(root, 'Stanford3d', 'Stanford3dDataset_v1.2_Aligned_Version')
         self.transform = transform
         areas = [1, 2, 3, 4, 6] if fold == 'train' else [5]
-        self.rooms = [(f'Area_{area}', room) for area in areas for room in os.listdir(os.path.join(self.root, f'Area_{area}'))]
+        self.rooms = [(f'Area_{area}', room) for area in areas for room in os.listdir(os.path.join(self.root, f'Area_{area}')) if not room.startswith('.')]
 
     def __len__(self):
         return len(self.rooms)
