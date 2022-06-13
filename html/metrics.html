@@ -28,9 +28,13 @@
 </summary>
 <pre><code class="python">import torch
 
+def accuracy(ypred, y):
+    return (ypred == y).mean()
+
 def IoU(ypred, y, K):
     assert len(ypred.shape) == 1, &#39;ypred must be a vector&#39;
     assert len(y.shape) == 1, &#39;y must be a vector&#39;
+    assert torch.all(torch.logical_and(ypred &gt;= 0, ypred &lt; K)), &#39;ypred must be probabilities (did you forget the softmax?)&#39;
     ypred = ypred[None]
     y = y[None]
     kk = torch.arange(K, device=y.device)[:, None]
@@ -62,6 +66,7 @@ def mIoU(ypred, y, K):
 <pre><code class="python">def IoU(ypred, y, K):
     assert len(ypred.shape) == 1, &#39;ypred must be a vector&#39;
     assert len(y.shape) == 1, &#39;y must be a vector&#39;
+    assert torch.all(torch.logical_and(ypred &gt;= 0, ypred &lt; K)), &#39;ypred must be probabilities (did you forget the softmax?)&#39;
     ypred = ypred[None]
     y = y[None]
     kk = torch.arange(K, device=y.device)[:, None]
@@ -69,6 +74,19 @@ def mIoU(ypred, y, K):
     cmij = torch.logical_and(ypred == kk, y != kk).sum(1)
     cmki = torch.logical_and(ypred != kk, y == kk).sum(1)
     return cmii / (cmii + cmij + cmki)</code></pre>
+</details>
+</dd>
+<dt id="metrics.accuracy"><code class="name flex">
+<span>def <span class="ident">accuracy</span></span>(<span>ypred, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def accuracy(ypred, y):
+    return (ypred == y).mean()</code></pre>
 </details>
 </dd>
 <dt id="metrics.mIoU"><code class="name flex">
@@ -98,6 +116,7 @@ def mIoU(ypred, y, K):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="metrics.IoU" href="#metrics.IoU">IoU</a></code></li>
+<li><code><a title="metrics.accuracy" href="#metrics.accuracy">accuracy</a></code></li>
 <li><code><a title="metrics.mIoU" href="#metrics.mIoU">mIoU</a></code></li>
 </ul>
 </li>
