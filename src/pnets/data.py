@@ -84,7 +84,6 @@ class SemanticKITTI(Dataset):
 class ICCV17ShapeNet(Dataset):
     '''A ShapeNetCore version with segmentations used for an ICCV17 competition. https://shapenet.cs.stanford.edu/iccv17/'''
 
-    nclasses = 16
     labels = ['Airplane', 'Bag', 'Cap', 'Car', 'Chair', 'Earphone', 'Guitar', 'Knife', 'Lamp', 'Laptop', 'Motorbike', 'Mug', 'Pistol', 'Rocket', 'Skateboard', 'Table']
     folder_to_label = ['02691156', '02773838', '02954340', '02958343', '03001627', '03261776', '03467517', '03624134', '03636649', '03642806', '03790512', '03797390', '03948459', '04099429', '04225987', '04379243']
 
@@ -95,6 +94,7 @@ class ICCV17ShapeNet(Dataset):
         root_segs = os.path.join(root, f'{fold}_label')
         self.transform = transform
         self.segmentation = segmentation
+        self.nclasses = 6 if segmentation else len(labels)
         self.classes = []
         self.objfnames = []
         self.segfnames = []
@@ -110,7 +110,7 @@ class ICCV17ShapeNet(Dataset):
     def __getitem__(self, i):
         P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
         if self.segmentation:
-            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)
+            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)-1
         else:
             Y = self.classes[i]
         if self.transform:

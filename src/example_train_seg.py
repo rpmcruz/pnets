@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn.functional as F
 from time import time
+from tqdm import tqdm
 import numpy as np
 import pnets as pn
 
@@ -50,11 +51,13 @@ ce_loss = torch.nn.CrossEntropyLoss()
 # train the model
 model.train()
 for epoch in range(args.epochs):
+    KK = []
+    KK_pred = []
     print(f'* Epoch {epoch+1} / {args.epochs}')
     tic = time()
     avg_loss = 0
     avg_acc = 0
-    for P, Y in tr:
+    for P, Y in tqdm(tr):
         P = P.to(device)
         Y = Y.to(device)
 
@@ -69,7 +72,13 @@ for epoch in range(args.epochs):
         avg_loss += float(loss) / len(tr)
         K_pred = F.softmax(Y_pred, 1).argmax(1)
         avg_acc += float((Y == K_pred).float().mean()) / len(tr)
+        KK.append(Y.view(-1))
+        KK_pred.append(K_pred.detach().view(-1))
     toc = time()
     print(f'- {toc-tic:.1f}s - Loss: {avg_loss} - Acc: {avg_acc}')
+    KK = torch.cat(KK)
+    KK_pred = torch.cat(KK_pred)
+    print('IoU:', pn.metrics.IoU(KK_pred, KK, K).cpu().numpy())
+    print('mIoU:', pn.metrics.mIoU(KK_pred, KK, K).cpu().numpy())
 
 torch.save(model, 'model-semantickitti.pth')

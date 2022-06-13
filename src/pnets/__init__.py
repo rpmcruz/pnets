@@ -1,1 +1,1 @@
-from pnets import aug, data, plot, pointnet
+from pnets import aug, data, metrics, plot, pointnet
