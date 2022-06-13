@@ -115,7 +115,6 @@ class SemanticKITTI(Dataset):
 class ICCV17ShapeNet(Dataset):
     &#39;&#39;&#39;A ShapeNetCore version with segmentations used for an ICCV17 competition. https://shapenet.cs.stanford.edu/iccv17/&#39;&#39;&#39;
 
-    nclasses = 16
     labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
     folder_to_label = [&#39;02691156&#39;, &#39;02773838&#39;, &#39;02954340&#39;, &#39;02958343&#39;, &#39;03001627&#39;, &#39;03261776&#39;, &#39;03467517&#39;, &#39;03624134&#39;, &#39;03636649&#39;, &#39;03642806&#39;, &#39;03790512&#39;, &#39;03797390&#39;, &#39;03948459&#39;, &#39;04099429&#39;, &#39;04225987&#39;, &#39;04379243&#39;]
 
@@ -126,6 +125,7 @@ class ICCV17ShapeNet(Dataset):
         root_segs = os.path.join(root, f&#39;{fold}_label&#39;)
         self.transform = transform
         self.segmentation = segmentation
+        self.nclasses = 6 if segmentation else len(labels)
         self.classes = []
         self.objfnames = []
         self.segfnames = []
@@ -136,12 +136,12 @@ class ICCV17ShapeNet(Dataset):
                 self.classes.append(self.folder_to_label.index(catname))
 
     def __len__(self):
-        return len(self.files)
+        return len(self.objfnames)
 
     def __getitem__(self, i):
         P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
         if self.segmentation:
-            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)
+            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)-1
         else:
             Y = self.classes[i]
         if self.transform:
@@ -218,7 +218,7 @@ class Stanford3d(Dataset):
         self.root = os.path.join(root, &#39;Stanford3d&#39;, &#39;Stanford3dDataset_v1.2_Aligned_Version&#39;)
         self.transform = transform
         areas = [1, 2, 3, 4, 6] if fold == &#39;train&#39; else [5]
-        self.rooms = [(f&#39;Area_{area}&#39;, room) for area in areas for room in os.listdir(os.path.join(self.root, f&#39;Area_{area}&#39;))]
+        self.rooms = [(f&#39;Area_{area}&#39;, room) for area in areas for room in os.listdir(os.path.join(self.root, f&#39;Area_{area}&#39;)) if not room.startswith(&#39;.&#39;)]
 
     def __len__(self):
         return len(self.rooms)
@@ -446,7 +446,6 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">class ICCV17ShapeNet(Dataset):
     &#39;&#39;&#39;A ShapeNetCore version with segmentations used for an ICCV17 competition. https://shapenet.cs.stanford.edu/iccv17/&#39;&#39;&#39;
 
-    nclasses = 16
     labels = [&#39;Airplane&#39;, &#39;Bag&#39;, &#39;Cap&#39;, &#39;Car&#39;, &#39;Chair&#39;, &#39;Earphone&#39;, &#39;Guitar&#39;, &#39;Knife&#39;, &#39;Lamp&#39;, &#39;Laptop&#39;, &#39;Motorbike&#39;, &#39;Mug&#39;, &#39;Pistol&#39;, &#39;Rocket&#39;, &#39;Skateboard&#39;, &#39;Table&#39;]
     folder_to_label = [&#39;02691156&#39;, &#39;02773838&#39;, &#39;02954340&#39;, &#39;02958343&#39;, &#39;03001627&#39;, &#39;03261776&#39;, &#39;03467517&#39;, &#39;03624134&#39;, &#39;03636649&#39;, &#39;03642806&#39;, &#39;03790512&#39;, &#39;03797390&#39;, &#39;03948459&#39;, &#39;04099429&#39;, &#39;04225987&#39;, &#39;04379243&#39;]
 
@@ -457,6 +456,7 @@ if __name__ == &#34;__main__&#34;:
         root_segs = os.path.join(root, f&#39;{fold}_label&#39;)
         self.transform = transform
         self.segmentation = segmentation
+        self.nclasses = 6 if segmentation else len(labels)
         self.classes = []
         self.objfnames = []
         self.segfnames = []
@@ -467,12 +467,12 @@ if __name__ == &#34;__main__&#34;:
                 self.classes.append(self.folder_to_label.index(catname))
 
     def __len__(self):
-        return len(self.files)
+        return len(self.objfnames)
 
     def __getitem__(self, i):
         P = np.loadtxt(self.objfnames[i]).astype(np.float32).T
         if self.segmentation:
-            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)
+            Y = np.loadtxt(self.segfnames[i]).astype(np.int64)-1
         else:
             Y = self.classes[i]
         if self.transform:
@@ -496,10 +496,6 @@ if __name__ == &#34;__main__&#34;:
 <div class="desc"></div>
 </dd>
 <dt id="data.ICCV17ShapeNet.labels"><code class="name">var <span class="ident">labels</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="data.ICCV17ShapeNet.nclasses"><code class="name">var <span class="ident">nclasses</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -638,7 +634,7 @@ if __name__ == &#34;__main__&#34;:
         self.root = os.path.join(root, &#39;Stanford3d&#39;, &#39;Stanford3dDataset_v1.2_Aligned_Version&#39;)
         self.transform = transform
         areas = [1, 2, 3, 4, 6] if fold == &#39;train&#39; else [5]
-        self.rooms = [(f&#39;Area_{area}&#39;, room) for area in areas for room in os.listdir(os.path.join(self.root, f&#39;Area_{area}&#39;))]
+        self.rooms = [(f&#39;Area_{area}&#39;, room) for area in areas for room in os.listdir(os.path.join(self.root, f&#39;Area_{area}&#39;)) if not room.startswith(&#39;.&#39;)]
 
     def __len__(self):
         return len(self.rooms)
@@ -770,7 +766,6 @@ if __name__ == &#34;__main__&#34;:
 <ul class="">
 <li><code><a title="data.ICCV17ShapeNet.folder_to_label" href="#data.ICCV17ShapeNet.folder_to_label">folder_to_label</a></code></li>
 <li><code><a title="data.ICCV17ShapeNet.labels" href="#data.ICCV17ShapeNet.labels">labels</a></code></li>
-<li><code><a title="data.ICCV17ShapeNet.nclasses" href="#data.ICCV17ShapeNet.nclasses">nclasses</a></code></li>
 </ul>
 </li>
 <li>

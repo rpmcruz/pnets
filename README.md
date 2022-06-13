@@ -10,6 +10,7 @@ The package is made of the following modules:
 
 * [`aug`](http://htmlpreview.github.io/?https://github.com/rpmcruz/pnets/blob/main/html/aug.html): augmentation methods
 * [`data`](http://htmlpreview.github.io/?https://github.com/rpmcruz/pnets/blob/main/html/data.html): datasets that we come with
+* [`metrics`](http://htmlpreview.github.io/?https://github.com/rpmcruz/pnets/blob/main/html/metrics.html): metrics for point-clouds
 * [`plot`](http://htmlpreview.github.io/?https://github.com/rpmcruz/pnets/blob/main/html/plot.html): plotting routines
 * [`pointnet`](http://htmlpreview.github.io/?https://github.com/rpmcruz/pnets/blob/main/html/pointnet.html): a vanilla PointNet implementation (for classification and segmentation)
 
