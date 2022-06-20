@@ -58,11 +58,13 @@ class SemanticKITTI(Dataset):
     segmentation = True
 
     def __init__(self, root, fold, transform):
-        assert fold in ('train', 'test')
+        assert fold in ('train', 'val', 'test')
         self.root = os.path.join(root, 'semantic-kitti')
         self.transform = transform
         # as suggested by semantic-kitti, we use 00-10 (train), 11-21 (test)
-        seqs = range(0, 10+1) if fold == 'train' else range(11, 21+1)
+        # we will use the 10 as the validation set
+        folds = {'train': range(0, 10), 'val': range(10, 11), 'test': range(11, 21+1)}
+        seqs = folds[fold]
         self.files = []
         for seq in seqs:
             self.files += [(seq, f) for f in os.listdir(os.path.join(self.root, 'sequences', '%02d' % seq, 'velodyne'))]
