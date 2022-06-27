@@ -31,6 +31,10 @@
 def accuracy(ypred, y):
     return (ypred == y).mean()
 
+def accuracy_per_class(ypred, y):
+    K = max(ypred.amax(), y.amax())+1
+    return torch.stack([torch.logical_and(y == k, ypred == k).sum() / (y == k).sum() for k in range(K)])
+
 def IoU(ypred, y, K):
     assert len(ypred.shape) == 1, &#39;ypred must be a vector&#39;
     assert len(y.shape) == 1, &#39;y must be a vector&#39;
@@ -89,6 +93,20 @@ def mIoU(ypred, y, K):
     return (ypred == y).mean()</code></pre>
 </details>
 </dd>
+<dt id="metrics.accuracy_per_class"><code class="name flex">
+<span>def <span class="ident">accuracy_per_class</span></span>(<span>ypred, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def accuracy_per_class(ypred, y):
+    K = max(ypred.amax(), y.amax())+1
+    return torch.stack([torch.logical_and(y == k, ypred == k).sum() / (y == k).sum() for k in range(K)])</code></pre>
+</details>
+</dd>
 <dt id="metrics.mIoU"><code class="name flex">
 <span>def <span class="ident">mIoU</span></span>(<span>ypred, y, K)</span>
 </code></dt>
@@ -117,6 +135,7 @@ def mIoU(ypred, y, K):
 <ul class="">
 <li><code><a title="metrics.IoU" href="#metrics.IoU">IoU</a></code></li>
 <li><code><a title="metrics.accuracy" href="#metrics.accuracy">accuracy</a></code></li>
+<li><code><a title="metrics.accuracy_per_class" href="#metrics.accuracy_per_class">accuracy_per_class</a></code></li>
 <li><code><a title="metrics.mIoU" href="#metrics.mIoU">mIoU</a></code></li>
 </ul>
 </li>

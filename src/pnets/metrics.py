@@ -3,6 +3,10 @@ import torch
 def accuracy(ypred, y):
     return (ypred == y).mean()
 
+def accuracy_per_class(ypred, y):
+    K = max(ypred.amax(), y.amax())+1
+    return torch.stack([torch.logical_and(y == k, ypred == k).sum() / (y == k).sum() for k in range(K)])
+
 def IoU(ypred, y, K):
     assert len(ypred.shape) == 1, 'ypred must be a vector'
     assert len(y.shape) == 1, 'y must be a vector'

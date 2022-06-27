@@ -81,4 +81,4 @@ for epoch in range(args.epochs):
     print('IoU:', pn.metrics.IoU(KK_pred, KK, K).cpu().numpy())
     print('mIoU:', pn.metrics.mIoU(KK_pred, KK, K).cpu().numpy())
 
-torch.save(model, 'model-semantickitti.pth')
+torch.save(model, f'model-{args.dataset}.pth')
