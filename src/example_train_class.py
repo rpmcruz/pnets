@@ -24,8 +24,8 @@ print('Using', device)
 
 # load the dataset with augmentation
 aug = pn.aug.Compose(
-    pn.aug.Resample(args.npoints),
     pn.aug.Normalize(),
+    pn.aug.Resample(args.npoints),
     pn.aug.Jitter(),
     pn.aug.RandomRotation('Z', 0, 2*np.pi),
 )
